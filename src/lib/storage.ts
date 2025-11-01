@@ -1,6 +1,9 @@
 import { Game, GameSession, Participant, GameParticipant, Meeting } from '../types';
 
 export interface StorageAdapter {
+  // Game operations
+  getGames(): Promise<Game[]>;
+  
   // Meeting operations
   getMeeting(id: string): Promise<Meeting | null>;
   createMeeting(totalParticipants: number): Promise<Meeting>;
@@ -70,6 +73,14 @@ export class MockStorageAdapter implements StorageAdapter {
     if (snapshot) {
       this.sessionUpdateListeners.forEach(listener => listener(sessionId, snapshot));
     }
+  }
+
+  async getGames(): Promise<Game[]> {
+    // Mock games for testing
+    return [
+      { id: '1', name: 'Тестовая игра 1', min_players: 2, description: 'Описание игры 1' },
+      { id: '2', name: 'Тестовая игра 2', min_players: 3, description: 'Описание игры 2' },
+    ];
   }
 
   async getMeeting(id: string): Promise<Meeting | null> {
@@ -366,6 +377,21 @@ export class RESTStorageAdapter implements StorageAdapter {
 
   isWebSocketConnected(): boolean {
     return this.wsManager.isConnected();
+  }
+
+  async getGames(): Promise<Game[]> {
+    try {
+      const response = await this.authenticatedFetch(`${this.baseUrl}/games`);
+      if (!response.ok) {
+        console.error(`Failed to get games:`, response.status, response.statusText);
+        return [];
+      }
+      const data = await response.json();
+      return data.games || [];
+    } catch (error) {
+      console.error('Error getting games:', error);
+      return [];
+    }
   }
 
   async getMeeting(id: string): Promise<Meeting | null> {

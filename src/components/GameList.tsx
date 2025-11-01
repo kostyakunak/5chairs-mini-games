@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { storageAdapter } from '../lib/adapter';
 import { Game } from '../types';
 
 interface GameListProps {
@@ -16,13 +16,10 @@ export function GameList({ onSelectGame }: GameListProps) {
 
   async function loadGames() {
     try {
-      const { data, error } = await supabase
-        .from('games')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setGames(data || []);
+      const gamesData = await storageAdapter.getGames();
+      // Sort by name
+      gamesData.sort((a, b) => a.name.localeCompare(b.name));
+      setGames(gamesData);
     } catch (error) {
       console.error('Error loading games:', error);
     } finally {

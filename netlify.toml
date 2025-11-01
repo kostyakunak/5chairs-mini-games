@@ -1,0 +1,15 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  VITE_RAILWAY_API_BASE_URL = "https://five-chairs-user-api-production.up.railway.app/api"
+  # VITE_USER_BOT_TOKEN не должен быть здесь - токен передается через Telegram initData
