@@ -76,11 +76,8 @@ export class MockStorageAdapter implements StorageAdapter {
   }
 
   async getGames(): Promise<Game[]> {
-    // Mock games for testing
-    return [
-      { id: '1', name: 'Тестовая игра 1', min_players: 2, description: 'Описание игры 1' },
-      { id: '2', name: 'Тестовая игра 2', min_players: 3, description: 'Описание игры 2' },
-    ];
+    // No mock games - use REST API for real games from database
+    return [];
   }
 
   async getMeeting(id: string): Promise<Meeting | null> {

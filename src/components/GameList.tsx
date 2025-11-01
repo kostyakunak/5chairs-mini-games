@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { storageAdapter } from '../lib/adapter';
+import { useState } from 'react';
+import { HARDCODED_GAMES } from '../lib/games';
 import { Game } from '../types';
 
 interface GameListProps {
@@ -7,33 +7,11 @@ interface GameListProps {
 }
 
 export function GameList({ onSelectGame }: GameListProps) {
-  const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadGames();
-  }, []);
-
-  async function loadGames() {
-    try {
-      const gamesData = await storageAdapter.getGames();
-      // Sort by name
-      gamesData.sort((a, b) => a.name.localeCompare(b.name));
-      setGames(gamesData);
-    } catch (error) {
-      console.error('Error loading games:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center paper-texture">
-        <div className="text-[#ff6b35] text-xl animate-pulse-subtle">Загрузка...</div>
-      </div>
-    );
-  }
+  // Используем захардкоженный список игр
+  const [games] = useState<Game[]>(() => {
+    // Сортируем по имени
+    return [...HARDCODED_GAMES].sort((a, b) => a.name.localeCompare(b.name));
+  });
 
   return (
     <div className="min-h-screen paper-texture py-12 px-6">
