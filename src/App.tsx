@@ -3,7 +3,7 @@ import { GameList } from './components/GameList';
 import { GameLobby } from './components/GameLobby';
 import { TestModePanel } from './components/TestModePanel';
 import { MultiViewSimulator } from './components/MultiViewSimulator';
-import { supabase } from './lib/supabase';
+import { storageAdapter } from './lib/adapter';
 import { Game, TelegramUser } from './types';
 import { config } from './config';
 
@@ -39,17 +39,14 @@ function App() {
       } else {
         // Fallback to creating new meeting only if not in prod mode or explicitly allowed
         if (config.USE_TEST_MODE) {
-          const { data: meeting } = await supabase
-            .from('meetings')
-            .insert({
-              total_participants: 5
-            })
-            .select()
-            .single();
-
-          if (meeting) {
-            setMeetingId(meeting.id);
-            setTotalParticipants(meeting.total_participants);
+          try {
+            const meeting = await storageAdapter.createMeeting(5);
+            if (meeting) {
+              setMeetingId(meeting.id);
+              setTotalParticipants(meeting.total_participants);
+            }
+          } catch (error) {
+            console.error('Failed to create test meeting:', error);
           }
         }
       }
@@ -99,12 +96,8 @@ function App() {
 
   async function handleChangeTotalParticipants(newTotal: number) {
     setTotalParticipants(newTotal);
-    if (meetingId) {
-      await supabase
-        .from('meetings')
-        .update({ total_participants: newTotal })
-        .eq('id', meetingId);
-    }
+    // Note: Meeting updates are handled server-side, this is just UI state for test mode
+    // In production, meeting data comes from the backend API
   }
 
   function handleAddParticipant() {
