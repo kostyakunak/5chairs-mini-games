@@ -33,9 +33,24 @@ function App() {
       const meetingIdFromUrl = urlParams.get('m');
       const totalFromUrl = urlParams.get('t');
 
-      if (meetingIdFromUrl && totalFromUrl) {
+      if (meetingIdFromUrl) {
         setMeetingId(meetingIdFromUrl);
-        setTotalParticipants(parseInt(totalFromUrl));
+        
+        // Try to get actual total_participants from API first
+        try {
+          const meetingInfo = await storageAdapter.getMeeting(meetingIdFromUrl);
+          if (meetingInfo && meetingInfo.total_participants > 0) {
+            setTotalParticipants(meetingInfo.total_participants);
+          } else if (totalFromUrl) {
+            // Fallback to URL parameter if API doesn't return it
+            setTotalParticipants(parseInt(totalFromUrl));
+          }
+        } catch (error) {
+          console.warn('Failed to get meeting info from API, using URL parameter:', error);
+          if (totalFromUrl) {
+            setTotalParticipants(parseInt(totalFromUrl));
+          }
+        }
       } else {
         // Fallback to creating new meeting only if not in prod mode or explicitly allowed
         if (config.USE_TEST_MODE) {
