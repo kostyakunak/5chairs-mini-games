@@ -87,6 +87,27 @@ function App() {
   }
 
   function handleSelectGame(game: Game) {
+    console.log('Game selected:', game);
+    console.log('Current state:', { 
+      meetingId, 
+      currentTelegramUserId, 
+      initialized,
+      config: config.USE_TEST_MODE 
+    });
+    
+    // Check if we have required data
+    if (!meetingId) {
+      console.error('Cannot select game: meetingId is missing');
+      alert('Ошибка: отсутствует ID встречи. Пожалуйста, перезагрузите страницу из Telegram.');
+      return;
+    }
+    
+    if (!currentTelegramUserId || currentTelegramUserId === 0) {
+      console.error('Cannot select game: currentTelegramUserId is missing');
+      alert('Ошибка: не удалось определить ID пользователя. Пожалуйста, перезагрузите страницу из Telegram.');
+      return;
+    }
+    
     setSelectedGame(game);
   }
 
@@ -147,15 +168,35 @@ function App() {
         </button>
       )}
 
-      {selectedGame && meetingId && currentTelegramUserId ? (
-        <GameLobby
-          game={selectedGame}
-          meetingId={meetingId}
-          currentTelegramUserId={currentTelegramUserId}
-          currentTelegramUsername={currentTelegramUsername}
-          totalParticipants={totalParticipants}
-          onBack={handleBack}
-        />
+      {selectedGame ? (
+        meetingId && currentTelegramUserId ? (
+          <GameLobby
+            game={selectedGame}
+            meetingId={meetingId}
+            currentTelegramUserId={currentTelegramUserId}
+            currentTelegramUsername={currentTelegramUsername}
+            totalParticipants={totalParticipants}
+            onBack={handleBack}
+          />
+        ) : (
+          <div className="min-h-screen flex items-center justify-center paper-texture">
+            <div className="max-w-md mx-auto p-6 text-center">
+              <div className="text-red-600 text-xl font-semibold mb-4">
+                Ошибка инициализации
+              </div>
+              <div className="text-gray-700 mb-4">
+                {!meetingId && <div>Отсутствует ID встречи</div>}
+                {!currentTelegramUserId && <div>Не удалось определить ID пользователя</div>}
+              </div>
+              <button
+                onClick={() => setSelectedGame(null)}
+                className="bg-[#ff6b35] hover:bg-[#e55a28] text-white font-semibold py-2 px-6 rounded-lg"
+              >
+                Назад к списку игр
+              </button>
+            </div>
+          </div>
+        )
       ) : (
         <GameList onSelectGame={handleSelectGame} />
       )}
