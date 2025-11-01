@@ -34,6 +34,7 @@ function App() {
       const totalFromUrl = urlParams.get('t');
 
       if (meetingIdFromUrl) {
+        // Режим встречи с конкретным meeting_id
         setMeetingId(meetingIdFromUrl);
         
         // Try to get actual total_participants from API first
@@ -52,18 +53,13 @@ function App() {
           }
         }
       } else {
-        // Fallback to creating new meeting only if not in prod mode or explicitly allowed
-        if (config.USE_TEST_MODE) {
-          try {
-            const meeting = await storageAdapter.createMeeting(5);
-            if (meeting) {
-              setMeetingId(meeting.id);
-              setTotalParticipants(meeting.total_participants);
-            }
-          } catch (error) {
-            console.error('Failed to create test meeting:', error);
-          }
-        }
+        // Режим общей комнаты - нет ограничений по количеству участников
+        // Используем специальный ID для общей комнаты
+        const publicLobbyId = 'public_lobby';
+        setMeetingId(publicLobbyId);
+        // Неограниченное количество участников (установим большое число)
+        setTotalParticipants(999);
+        console.log('🌍 Public lobby mode - unlimited participants');
       }
 
       // Initialize user data based on mode

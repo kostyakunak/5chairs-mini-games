@@ -75,11 +75,6 @@ export class MockStorageAdapter implements StorageAdapter {
     }
   }
 
-  async getGames(): Promise<Game[]> {
-    // No mock games - use REST API for real games from database
-    return [];
-  }
-
   async getMeeting(id: string): Promise<Meeting | null> {
     return this.meetings.get(id) || null;
   }
@@ -423,7 +418,9 @@ export class RESTStorageAdapter implements StorageAdapter {
 
   async getActiveSession(meetingId: string, gameId: string): Promise<GameSession | null> {
     try {
-      const response = await this.authenticatedFetch(`${this.baseUrl}/sessions?meeting_id=${meetingId}&game_id=${gameId}`);
+      // Для публичной комнаты используем специальный meeting_id
+      const actualMeetingId = meetingId === 'public_lobby' ? -1 : parseInt(meetingId);
+      const response = await this.authenticatedFetch(`${this.baseUrl}/sessions?meeting_id=${actualMeetingId}&game_id=${gameId}`);
       if (!response.ok) {
         console.error(`Failed to get active session for meeting ${meetingId}, game ${gameId}:`, response.status, response.statusText);
         return null;
@@ -437,9 +434,11 @@ export class RESTStorageAdapter implements StorageAdapter {
 
   async createWaitingSession(meetingId: string, gameId: string): Promise<GameSession> {
     try {
+      // Для публичной комнаты используем специальный meeting_id
+      const actualMeetingId = meetingId === 'public_lobby' ? -1 : parseInt(meetingId);
       const response = await this.authenticatedFetch(`${this.baseUrl}/sessions`, {
         method: 'POST',
-        body: JSON.stringify({ meeting_id: meetingId, game_id: gameId }),
+        body: JSON.stringify({ meeting_id: actualMeetingId, game_id: gameId, is_public: meetingId === 'public_lobby' }),
       });
       if (!response.ok) {
         throw new Error(`Failed to create waiting session: ${response.status} ${response.statusText}`);
@@ -468,9 +467,15 @@ export class RESTStorageAdapter implements StorageAdapter {
 
   async getOrCreateParticipant(meetingId: string, telegramUserId: number, telegramUsername?: string): Promise<Participant> {
     try {
-      const response = await this.authenticatedFetch(`${this.baseUrl}/meetings/${meetingId}/participants`, {
+      // Для публичной комнаты используем специальный meeting_id
+      const actualMeetingId = meetingId === 'public_lobby' ? -1 : parseInt(meetingId);
+      const response = await this.authenticatedFetch(`${this.baseUrl}/meetings/${actualMeetingId}/participants`, {
         method: 'POST',
-        body: JSON.stringify({ telegram_user_id: telegramUserId.toString(), telegram_username: telegramUsername }),
+        body: JSON.stringify({ 
+          telegram_user_id: telegramUserId.toString(), 
+          telegram_username: telegramUsername,
+          is_public: meetingId === 'public_lobby'
+        }),
       });
       if (!response.ok) {
         throw new Error(`Failed to get or create participant: ${response.status} ${response.statusText}`);
